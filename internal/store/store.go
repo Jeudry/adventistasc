@@ -3,14 +3,15 @@ package store
 import (
 	"context"
 	"database/sql"
+	"github.com/GoogleCloudPlatform/golang-samples/run/helloworld/internal/store/models"
 )
 
 type Storage struct {
 	Posts interface {
-		Create(context.Context) error
+		Create(context.Context, *models.PostsModel) error
 	}
 	Users interface {
-		Create(context.Context) error
+		Create(context.Context, *models.UsersModel) error
 	}
 }
 
