@@ -7,5 +7,5 @@ type PostsModel struct {
 	UserID    int64    `json:"user_id"`
 	Tags      []string `json:"tags"`
 	CreatedAt string   `json:"created_at"`
-	UpdatedAt string
+	UpdatedAt string   `json:"updated_at"`
 }

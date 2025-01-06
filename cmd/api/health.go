@@ -1,7 +1,17 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+)
 
-func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Request){
-	w.Write([]byte(""))
+func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	data := map[string]string{
+		"status":  "Ok",
+		"env":     app.config.env,
+		"version": version,
+	}
+
+	if err := writeJson(w, http.StatusOK, data); err != nil {
+		writeJsonError(w, http.StatusInternalServerError, err.Error())
+	}
 }
