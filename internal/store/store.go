@@ -5,10 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/GoogleCloudPlatform/golang-samples/run/helloworld/internal/store/models"
+	"time"
 )
 
 var (
-	ErrNotFound = errors.New("Resource not found")
+	ErrNotFound          = errors.New("Resource not found")
+	QueryTimeoutDuration = 5 * time.Second
+	ErrConflict          = errors.New("Resource conflict")
 )
 
 type Storage struct {

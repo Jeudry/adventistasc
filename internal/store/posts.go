@@ -48,6 +48,10 @@ func (s *PostsStore) RetrieveById(ctx context.Context, id int64) (*models.PostsM
 func (s *PostsStore) Update(ctx context.Context, postUpdated *models.PostsModel) error {
 	query := `UPDATE posts SET content = $1, title = $2 WHERE id = $5 AND version = version + 1 RETURNING version`
 
+	ctx, timeout := context.WithTimeout(ctx, QueryTimeoutDuration)
+
+	defer timeout()
+
 	err := s.db.QueryRowContext(ctx, query, postUpdated.Content, postUpdated.Title, postUpdated.Version).Scan(
 		&postUpdated.Version,
 	)
@@ -55,7 +59,7 @@ func (s *PostsStore) Update(ctx context.Context, postUpdated *models.PostsModel)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return ErrNotFound
+			return ErrConflict
 		default:
 			return err
 		}
@@ -66,6 +70,10 @@ func (s *PostsStore) Update(ctx context.Context, postUpdated *models.PostsModel)
 
 func (s *PostsStore) Delete(ctx context.Context, id int64) error {
 	query := `DELETE FROM posts WHERE id = $1`
+
+	ctx, timeout := context.WithTimeout(ctx, QueryTimeoutDuration)
+
+	defer timeout()
 
 	res, err := s.db.ExecContext(ctx, query, id)
 

@@ -139,7 +139,7 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	if err := app.store.Posts.Update(ctx, postToBeUpdated); err != nil {
-		app.internalServerError(w, r, err)
+		app.handleError(w, r, err)
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, postToBeUpdated); err != nil {
