@@ -18,6 +18,9 @@ func (s *CommentsStore) CreatePostComment(ctx context.Context, comment *models.C
 		ctx, query, comment.Content, comment.PostID, comment.UserID,
 	).Scan(&comment.ID, &comment.CreatedAt, &comment.UpdatedAt)
 
+	ctx, cancel := context.WithTimeout(context.Background(), QueryTimeoutDuration)
+	defer cancel()
+
 	if err != nil {
 		return err
 	}
