@@ -15,6 +15,10 @@ type CreatePostPayload struct {
 	Tags    []string `json:"tags"`
 }
 
+type CreatePostCommentPayload struct {
+	Comment string `json:"comment"`
+}
+
 func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request) {
 	var payload CreatePostPayload
 
@@ -68,7 +72,54 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	comments, err := app.store.Comments.RetrieveCommentsByPostId(ctx, idAsInt)
+
+	if err != nil {
+		app.internalServerError(w, r, err)
+	}
+
+	post.Comments = comments
+
 	if err := writeJson(w, http.StatusOK, post); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+
+func (app *application) createPostCommentHandler(w http.ResponseWriter, r *http.Request) {
+	idParam := chi.URLParam(r, "postId")
+	idAsInt, err := strconv.ParseInt(idParam, 10, 64)
+
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+
+	var payload CreatePostCommentPayload
+
+	if err := readJson(w, r, &payload); err != nil {
+		app.badRequest(w, r, err)
+	}
+
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	comment := &models.CommentsModel{
+		Content: payload.Comment,
+		UserID:  1,
+		PostID:  idAsInt,
+	}
+
+	err = app.store.Comments.CreatePostComment(ctx, comment)
+
+	if err != nil {
+		app.internalServerError(w, r, err)
+	}
+
+	if err := writeJson(w, http.StatusOK, comment); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }

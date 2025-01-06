@@ -3,7 +3,6 @@ package store
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"github.com/GoogleCloudPlatform/golang-samples/run/helloworld/internal/store/models"
 	_ "github.com/lib/pq"
 )
@@ -12,7 +11,7 @@ type CommentsStore struct {
 	db *sql.DB
 }
 
-func (s *CommentsStore) Create(ctx context.Context, comment *models.CommentsModel) error {
+func (s *CommentsStore) CreatePostComment(ctx context.Context, comment *models.CommentsModel) error {
 	query := `INSERT INTO comments (content, post_id, user_id) VALUES ($1, $2, $3) RETURNING id, created_at, updated_at`
 
 	err := s.db.QueryRowContext(
@@ -26,26 +25,35 @@ func (s *CommentsStore) Create(ctx context.Context, comment *models.CommentsMode
 	return err
 }
 
-func (s *CommentsStore) RetrievePostById(ctx context.Context, id int64) (*models.CommentsModel, error) {
+func (s *CommentsStore) RetrieveCommentsByPostId(ctx context.Context, id int64) ([]models.CommentsModel, error) {
 	query := `
-		SELECT c.id, c.content, c.post_id, c.user_id, c.created_at, c.updated_at FROM comments c
-		JOIN users ON comments.user_id = users.id
+		SELECT c.id, c.content, c.post_id, c.user_id, c.created_at, c.updated_at, users.user_name, users.id FROM comments c
+		JOIN users ON c.user_id = users.id
 		WHERE c.post_id = $1
 		ORDER BY c.created_at 
 	`
 
-	var comments models.CommentsModel
-
-	err := s.db.QueryRowContext(ctx, query, id).Scan(&comments.ID, &comments.Content, &comments.PostID, &comments.UserID, &comments.CreatedAt, &comments.UpdatedAt)
+	rows, err := s.db.QueryContext(ctx, query, id)
 
 	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return nil, ErrNotFound
-		default:
-			return nil, err
-		}
+		return nil, err
 	}
 
-	return &comments, nil
+	defer rows.Close()
+
+	var comments []models.CommentsModel
+
+	for rows.Next() {
+		var c models.CommentsModel
+		c.User = models.UsersModel{}
+		err := rows.Scan(&c.ID, &c.Content, &c.PostID, &c.UserID, &c.CreatedAt, &c.UpdatedAt, &c.User.UserName, &c.User.ID)
+
+		if err != nil {
+			return nil, err
+		}
+
+		comments = append(comments, c)
+	}
+
+	return comments, nil
 }

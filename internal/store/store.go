@@ -20,8 +20,8 @@ type Storage struct {
 		Create(context.Context, *models.UsersModel) error
 	}
 	Comments interface {
-		Create(context.Context, *models.CommentsModel) error
-		RetrievePostById(context.Context, int64) (*models.CommentsModel, error)
+		CreatePostComment(context.Context, *models.CommentsModel) error
+		RetrieveCommentsByPostId(context.Context, int64) ([]models.CommentsModel, error)
 	}
 }
 

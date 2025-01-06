@@ -31,7 +31,7 @@ func (s *PostsStore) RetrieveById(ctx context.Context, id int64) (*models.PostsM
 
 	var post models.PostsModel
 
-	err := s.db.QueryRowContext(ctx, query, id).Scan(&post.ID, &post.Content, &post.Title, &post.UserID, &post.Tags, &post.CreatedAt, &post.UpdatedAt)
+	err := s.db.QueryRowContext(ctx, query, id).Scan(&post.ID, &post.Content, &post.Title, &post.UserID, pq.Array(&post.Tags), &post.CreatedAt, &post.UpdatedAt)
 
 	if err != nil {
 		switch {

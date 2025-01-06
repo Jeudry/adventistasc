@@ -46,7 +46,8 @@ func (app *application) mount() http.Handler {
 			r.Post("/", app.createPostHandler)
 
 			r.Route("/{postId}", func(r chi.Router) {
-				r.Get("/{postId}", app.getPostHandler)
+				r.Get("/", app.getPostHandler)
+				r.Post("/{postId}/comments", app.createPostCommentHandler)
 			})
 		})
 	})
