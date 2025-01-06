@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"github.com/GoogleCloudPlatform/golang-samples/run/helloworld/internal/store"
 	"log"
 	"net/http"
 )
@@ -21,4 +23,13 @@ func (app *application) notFound(w http.ResponseWriter, r *http.Request, err err
 	log.Printf("not found error: %s, path: %s error %s", r.Method, r.URL.Path, err)
 
 	writeJsonError(w, http.StatusNotFound, "The requested resource could not be found.")
+}
+
+func (app *application) handleError(w http.ResponseWriter, r *http.Request, err error) {
+	switch {
+	case errors.Is(err, store.ErrNotFound):
+		app.notFound(w, r, err)
+	default:
+		app.internalServerError(w, r, err)
+	}
 }

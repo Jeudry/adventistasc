@@ -8,5 +8,6 @@ type PostsModel struct {
 	Tags      []string        `json:"tags"`
 	CreatedAt string          `json:"created_at"`
 	UpdatedAt string          `json:"updated_at"`
+	Version   int             `json:"version"`
 	Comments  []CommentsModel `json:"comments"`
 }
