@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"github.com/GoogleCloudPlatform/golang-samples/run/helloworld/docs"
+	// Required for swagger docs
 	"log"
 	"net/http"
 	"time"
@@ -8,6 +11,7 @@ import (
 	"github.com/GoogleCloudPlatform/golang-samples/run/helloworld/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 type application struct {
@@ -16,9 +20,10 @@ type application struct {
 }
 
 type config struct {
-	addr string
-	db   dbConfig
-	env  string
+	addr   string
+	db     dbConfig
+	env    string
+	apiURL string
 }
 
 type dbConfig struct {
@@ -29,6 +34,8 @@ type dbConfig struct {
 }
 
 func (app *application) mount() http.Handler {
+
+	docsUrl := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
 
 	r := chi.NewRouter()
 
@@ -41,6 +48,7 @@ func (app *application) mount() http.Handler {
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
+		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsUrl)))
 
 		r.Route("/posts", func(r chi.Router) {
 			r.Post("/", app.createPostHandler)
@@ -77,6 +85,9 @@ func (app *application) mount() http.Handler {
 }
 
 func (app *application) run(mux http.Handler) error {
+	docs.SwaggerInfo.Version = version
+	docs.SwaggerInfo.Host = app.config.apiURL
+	docs.SwaggerInfo.BasePath = "/v1"
 
 	srv := &http.Server{
 		Addr:         app.config.addr,

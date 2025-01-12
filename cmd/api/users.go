@@ -16,6 +16,18 @@ type userKey string
 
 const userCtx userKey = "user"
 
+// @SUMMARY		Fetches a user profile
+// @Description	Fetches a user profile by ID
+// @Tags			users
+// @Accept			json
+// @Produce		json
+// @Param			id	path		int	true	"User ID"
+// @Success		200	{object}	models.UsersModel
+// @Failure		400	{object}	error
+// @Failure		404	{object}	error
+// @Failure		500	{object}	error
+// @Security		ApiKeyAuth
+// @Router			/users/{id} [get]
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromCtx(r)
 
@@ -24,6 +36,17 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// @SUMMARY		Follows a user
+// @Description	Fetches a user by ID
+// @Tags			users
+// @Accept			json
+// @Produce		json
+// @Param			userID	path		int		true	"User ID"
+// @Success		204		{object}	string	"User followed"
+// @Failure		400		{object}	string	"User payload failed"
+// @Failure		404		{object}	error	"User not found"
+// @Security		ApiKeyAuth
+// @Router			/users/{id}/follow [put]
 func (app *application) toggleFollowUserHandler(w http.ResponseWriter, r *http.Request) {
 	followerUser := getUserFromCtx(r)
 	var payload FollowUserToggle

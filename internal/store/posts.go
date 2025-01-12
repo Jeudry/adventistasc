@@ -130,7 +130,7 @@ func (s *PostsStore) RetrieveById(ctx context.Context, id int64) (*models.PostsM
 }
 
 func (s *PostsStore) Update(ctx context.Context, postUpdated *models.PostsModel) error {
-	query := `UPDATE posts SET content = $1, title = $2 WHERE id = $5 AND version = version + 1 RETURNING version`
+	query := `UPDATE posts SET content = $1, title = $2 WHERE id = $3 AND version = version + 1 RETURNING version`
 
 	ctx, timeout := context.WithTimeout(ctx, QueryTimeoutDuration)
 

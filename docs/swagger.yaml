@@ -1,0 +1,354 @@
+basePath: /v1
+definitions:
+  main.CreatePostCommentPayload:
+    properties:
+      comment:
+        type: string
+    type: object
+  main.CreatePostPayload:
+    properties:
+      content:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        maxLength: 100
+        type: string
+    required:
+    - title
+    type: object
+  main.UpdatePostPayload:
+    properties:
+      content:
+        maxLength: 1000
+        type: string
+      title:
+        maxLength: 100
+        type: string
+    type: object
+  models.CommentsModel:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      post_id:
+        type: integer
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/models.UsersModel'
+      user_id:
+        type: integer
+    type: object
+  models.PostsModel:
+    properties:
+      comments:
+        items:
+          $ref: '#/definitions/models.CommentsModel'
+        type: array
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/models.UsersModel'
+      user_id:
+        type: integer
+      version:
+        type: integer
+    type: object
+  models.UsersModel:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: integer
+      lastName:
+        type: string
+      updated_at:
+        type: string
+      userName:
+        type: string
+    type: object
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: Api for GopherSocial, a social network for gophers
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Swagger Example API
+paths:
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Returns the health status of the application
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Health status, environment, and version
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema: {}
+      summary: Health Check
+      tags:
+      - health
+  /posts:
+    post:
+      consumes:
+      - application/json
+      description: Create a new post with the provided title, content, and tags
+      parameters:
+      - description: Post creation payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.CreatePostPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created post
+          schema:
+            $ref: '#/definitions/models.PostsModel'
+        "400":
+          description: Bad request
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      summary: Create a new post
+      tags:
+      - posts
+  /posts/{postId}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a post by its ID
+      parameters:
+      - description: Post ID
+        in: path
+        name: postId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Post deleted successfully
+        "400":
+          description: Bad request
+          schema: {}
+        "404":
+          description: Post not found
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      summary: Delete an existing post
+      tags:
+      - posts
+    put:
+      consumes:
+      - application/json
+      description: Update the title and/or content of an existing post
+      parameters:
+      - description: Post ID
+        in: path
+        name: postId
+        required: true
+        type: integer
+      - description: Post update payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.UpdatePostPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated post
+          schema:
+            $ref: '#/definitions/models.PostsModel'
+        "400":
+          description: Bad request
+          schema: {}
+        "404":
+          description: Post not found
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      summary: Update an existing post
+      tags:
+      - posts
+  /posts/{postId}/comments:
+    post:
+      consumes:
+      - application/json
+      description: Create a new comment for a specific post
+      parameters:
+      - description: Post ID
+        in: path
+        name: postId
+        required: true
+        type: integer
+      - description: Comment creation payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.CreatePostCommentPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created comment
+          schema:
+            $ref: '#/definitions/models.CommentsModel'
+        "400":
+          description: Bad request
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      summary: Create a new comment for a post
+      tags:
+      - comments
+  /users/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Fetches a user profile by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UsersModel'
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Fetches a user profile
+      tags:
+      - users
+  /users/{id}/follow:
+    put:
+      consumes:
+      - application/json
+      description: Fetches a user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: User followed
+          schema:
+            type: string
+        "400":
+          description: User payload failed
+          schema:
+            type: string
+        "404":
+          description: User not found
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Follows a user
+      tags:
+      - users
+  /users/feed:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the feed for a user with pagination and sorting options
+      parameters:
+      - description: User ID
+        in: path
+        name: limit
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: offset
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: sort
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of posts in the user's feed
+          schema:
+            items:
+              $ref: '#/definitions/models.PostsModel'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Get User Feed
+      tags:
+      - feed
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
