@@ -10,4 +10,10 @@ type PostsModel struct {
 	UpdatedAt string          `json:"updated_at"`
 	Version   int             `json:"version"`
 	Comments  []CommentsModel `json:"comments"`
+	User      UsersModel      `json:"user"`
+}
+
+type PostWithMetadata struct {
+	PostsModel
+	CommentsCount int `json:"comment_count"`
 }

@@ -20,6 +20,7 @@ type Storage struct {
 		RetrieveById(context.Context, int64) (*models.PostsModel, error)
 		Update(context.Context, *models.PostsModel) error
 		Delete(context.Context, int64) error
+		GetUserFeed(context.Context, int64, models.PaginatedFeedQueryModel) ([]models.PostWithMetadata, error)
 	}
 	Users interface {
 		Create(context.Context, *models.UsersModel) error
