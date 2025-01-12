@@ -23,17 +23,22 @@ type Storage struct {
 	}
 	Users interface {
 		Create(context.Context, *models.UsersModel) error
+		RetrieveById(context.Context, int64) (*models.UsersModel, error)
 	}
 	Comments interface {
 		CreatePostComment(context.Context, *models.CommentsModel) error
 		RetrieveCommentsByPostId(context.Context, int64) ([]models.CommentsModel, error)
 	}
+	Followers interface {
+		ToggleUserFollow(context.Context, int64, int64) error
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
-		Posts:    &PostsStore{db: db},
-		Users:    &UsersStore{db: db},
-		Comments: &CommentsStore{db: db},
+		Posts:     &PostsStore{db: db},
+		Users:     &UsersStore{db: db},
+		Comments:  &CommentsStore{db: db},
+		Followers: &FollowersStore{db: db},
 	}
 }
