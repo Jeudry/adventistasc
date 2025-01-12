@@ -12,6 +12,90 @@ type PostsStore struct {
 	db *sql.DB
 }
 
+func (s *PostsStore) GetUserFeed(ctx context.Context, userId int64, fq models.PaginatedFeedQueryModel) ([]models.PostWithMetadata, error) {
+	var query string
+
+	baseQuery := `SELECT p.id, p.user_id, p.title, p.content, p.created_at, 
+            p.updated_at, p.version, p.tags, u.user_name, 
+            u.email, p.user_id, COUNT(c.id) AS comments_count 
+            FROM posts p 
+            LEFT JOIN comments c ON p.id = c.post_id
+            LEFT JOIN users u on p.user_id = u.id
+            JOIN followers f ON f.follower_id = p.user_id
+            WHERE f.user_id = $1`
+
+	if fq.Search != "" {
+		query = baseQuery + `
+        AND (p.title ILIKE '%' || $4 || '%' OR p.content ILIKE '%' || $4 || '%')
+    `
+	} else {
+		query = baseQuery + ` 
+        OR p.user_id = $1
+    `
+	}
+
+	if len(fq.Tags) > 0 {
+		if fq.Search != "" {
+			query += `AND (p.tags @> $4 OR $4 = '{}')`
+		} else {
+			query += `AND (p.tags @> $5 OR $5 = '{}')`
+		}
+	}
+
+	query += `
+    	GROUP BY p.id, u.user_name, u.email, u.id
+    	ORDER BY p.created_at ` + fq.Sort + `
+    	LIMIT $2 OFFSET $3
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	var rows *sql.Rows
+	var err error
+
+	if fq.Search != "" {
+		rows, err = s.db.QueryContext(ctx, query, userId, fq.Limit, fq.Offset, fq.Search)
+	} else if len(fq.Tags) > 0 {
+		rows, err = s.db.QueryContext(ctx, query, userId, fq.Limit, fq.Offset, pq.Array(fq.Tags))
+	} else {
+		rows, err = s.db.QueryContext(ctx, query, userId, fq.Limit, fq.Offset)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var feed []models.PostWithMetadata
+
+	for rows.Next() {
+		var p models.PostWithMetadata
+		err := rows.Scan(
+			&p.ID,
+			&p.UserID,
+			&p.Title,
+			&p.Content,
+			&p.CreatedAt,
+			&p.UpdatedAt,
+			&p.Version,
+			pq.Array(&p.Tags),
+			&p.User.UserName,
+			&p.User.Email,
+			&p.User.ID,
+			&p.CommentsCount,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		feed = append(feed, p)
+	}
+
+	return feed, nil
+}
+
 func (s *PostsStore) Create(ctx context.Context, post *models.PostsModel) error {
 	query := `INSERT INTO posts (content, title, user_id, tags) VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at`
 
